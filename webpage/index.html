@@ -11,10 +11,14 @@
         .messages { list-style: none; padding: 0; }
         .messages li { background: #e8f4e8; border: 1px solid #b2d8b2;
                         padding: .5rem .8rem; margin-bottom: .5rem; border-radius: 4px; }
+        fieldset { margin-bottom: 1rem; }
+        label.disabled { color: #aaa; }
+        label.disabled input { cursor: not-allowed; }
     </style>
 </head>
 <body>
     <h1>Upload a document</h1>
+    <p><a href="/results">View redacted results &rarr;</a></p>
 
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -25,8 +29,39 @@
     {% endwith %}
 
     <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".txt,.pdf,.docx">
+        <fieldset>
+            <legend>Strategy (required)</legend>
+            <label><input type="radio" name="strategy" value="regex" required> Regex</label><br>
+            <label><input type="radio" name="strategy" value="nlp" required> NLP (spaCy)</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Fields to redact (required, select one or more)</legend>
+            <label id="label-name"><input type="checkbox" name="selection" value="Name"> Name</label><br>
+            <label><input type="checkbox" name="selection" value="Email"> Email</label><br>
+            <label><input type="checkbox" name="selection" value="Phone number"> Phone number</label>
+        </fieldset>
+
+        <input type="file" name="file" accept=".txt,.pdf,.docx" required>
         <button type="submit">Upload</button>
     </form>
+
+    <script>
+        const strategyInputs = document.querySelectorAll('input[name="strategy"]');
+        const nameInput = document.querySelector('input[name="selection"][value="Name"]');
+        const nameLabel = document.getElementById('label-name');
+
+        function updateNameOption() {
+            const selected = document.querySelector('input[name="strategy"]:checked');
+            const regexChosen = selected && selected.value === 'regex';
+            nameInput.disabled = regexChosen;
+            nameLabel.classList.toggle('disabled', regexChosen);
+            if (regexChosen && nameInput.checked) {
+                nameInput.checked = false;
+            }
+        }
+
+        strategyInputs.forEach(r => r.addEventListener('change', updateNameOption));
+    </script>
 </body>
 </html>

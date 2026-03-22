@@ -1,8 +1,12 @@
+import json
 import pathlib
 from flask import Flask, request, redirect, url_for, render_template, flash
 
-STORAGE_DIR = pathlib.Path(__file__).parent.parent / "storage"
-STORAGE_DIR.mkdir(exist_ok=True)
+from pipeline.redactor import Redactor
+from pipeline.reconstructor import Reconstructor, STORAGE_DIR
+
+BUFFER_DIR = pathlib.Path(__file__).parent.parent / "buffer"
+BUFFER_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"txt", "pdf", "docx"}
 
@@ -21,6 +25,29 @@ def index():
 @app.route("/upload", methods=["POST"])
 def upload():
     file = request.files.get("file")
+    selections = request.form.getlist("selection")
+    strategy = request.form.get("strategy")
+
+    if not strategy:
+        flash("Please select a strategy (Regex or NLP).")
+        return redirect(url_for("index"))
+
+    if strategy not in {"regex", "nlp"}:
+        flash("Invalid strategy.")
+        return redirect(url_for("index"))
+
+    if not selections:
+        flash("Please select at least one field to redact.")
+        return redirect(url_for("index"))
+
+    valid_fields = {"Name", "Email", "Phone number"}
+    if not all(s in valid_fields for s in selections):
+        flash("Invalid selection.")
+        return redirect(url_for("index"))
+
+    if strategy == "regex" and "Name" in selections:
+        flash("Name redaction is not supported with Regex. Please choose NLP.")
+        return redirect(url_for("index"))
 
     if not file or file.filename == "":
         flash("No file selected.")
@@ -30,10 +57,31 @@ def upload():
         flash(f"Unsupported file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
         return redirect(url_for("index"))
 
-    dest = STORAGE_DIR / file.filename
-    file.save(dest)
-    flash(f"Uploaded '{file.filename}' successfully.")
-    return redirect(url_for("index"))
+    file.save(BUFFER_DIR / file.filename)
+
+    with open(BUFFER_DIR / (file.filename + ".json"), "w", encoding="utf-8") as fp:
+        json.dump({"strategy": strategy, "selections": selections}, fp)
+
+    redacted = Redactor(BUFFER_DIR / file.filename).redact()
+    output_path = Reconstructor(file.filename).reconstruct(redacted)
+
+    return redirect(url_for("result", filename=output_path.name))
+
+
+@app.route("/results")
+def results():
+    files = sorted(STORAGE_DIR.glob("*.txt"), key=lambda f: f.stat().st_mtime, reverse=True)
+    return render_template("results.html", files=[f.name for f in files])
+
+
+@app.route("/result/<filename>")
+def result(filename: str):
+    output_path = STORAGE_DIR / filename
+    if not output_path.exists():
+        flash("Result file not found.")
+        return redirect(url_for("index"))
+    content = output_path.read_text(encoding="utf-8")
+    return render_template("result.html", filename=filename, content=content)
 
 
 if __name__ == "__main__":

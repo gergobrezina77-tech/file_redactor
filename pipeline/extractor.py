@@ -19,15 +19,17 @@ class Extractor:
             "pdf":  self._extract_pdf,
             "docx": self._extract_docx,
         }
-        return extractors[self.file_type]()
+        try:
+            text = extractors[self.file_type]()
+        finally:
+            self.file_path.unlink(missing_ok=True)
+        return text
 
     def _extract_txt(self) -> str:
         return self.file_path.read_text(encoding="utf-8")
 
     def _extract_pdf(self) -> str:
-        reader = pypdf.PdfReader(self.file_path)
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        raise NotImplementedError("PDF extraction is not implemented yet.")
 
     def _extract_docx(self) -> str:
-        doc = docx.Document(self.file_path)
-        return "\n".join(paragraph.text for paragraph in doc.paragraphs)
+        raise NotImplementedError("DOCX extraction is not implemented yet.")

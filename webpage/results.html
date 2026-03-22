@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Redacted Results</title>
+    <style>
+        body { font-family: sans-serif; max-width: 480px; margin: 80px auto; }
+        h1   { font-size: 1.4rem; margin-bottom: 1.5rem; }
+        ul   { list-style: none; padding: 0; }
+        li   { padding: .4rem 0; border-bottom: 1px solid #eee; }
+        li a { text-decoration: none; color: #2a6ebb; }
+        li a:hover { text-decoration: underline; }
+        .empty { color: #888; }
+        .back  { font-size: .9rem; }
+    </style>
+</head>
+<body>
+    <h1>Redacted results</h1>
+
+    {% if files %}
+    <ul>
+        {% for filename in files %}
+        <li><a href="{{ url_for('result', filename=filename) }}">{{ filename }}</a></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No results yet.</p>
+    {% endif %}
+
+    <br>
+    <a class="back" href="/">&#8592; Back to upload</a>
+</body>
+</html>
