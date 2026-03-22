@@ -1,11 +1,10 @@
 import pathlib
-import pypdf
-import docx
+
 
 
 class Extractor:
-    """A simple text extractor for txt, pdf, and docx files."""
-    SUPPORTED_TYPES = {"txt", "pdf", "docx"}
+    """A simple text extractor for txt files."""
+    SUPPORTED_TYPES = {"txt"}
 
     def __init__(self, file_path: str):
         self.file_path = pathlib.Path(file_path)
@@ -16,8 +15,6 @@ class Extractor:
     def extract(self) -> str:
         extractors = {
             "txt":  self._extract_txt,
-            "pdf":  self._extract_pdf,
-            "docx": self._extract_docx,
         }
         try:
             text = extractors[self.file_type]()
@@ -27,9 +24,3 @@ class Extractor:
 
     def _extract_txt(self) -> str:
         return self.file_path.read_text(encoding="utf-8")
-
-    def _extract_pdf(self) -> str:
-        raise NotImplementedError("PDF extraction is not implemented yet.")
-
-    def _extract_docx(self) -> str:
-        raise NotImplementedError("DOCX extraction is not implemented yet.")

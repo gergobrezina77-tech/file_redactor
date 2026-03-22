@@ -8,7 +8,7 @@ from pipeline.reconstructor import Reconstructor, STORAGE_DIR
 BUFFER_DIR = pathlib.Path(__file__).parent.parent / "buffer"
 BUFFER_DIR.mkdir(exist_ok=True)
 
-ALLOWED_EXTENSIONS = {"txt", "pdf", "docx"}
+ALLOWED_EXTENSIONS = {"txt"}
 
 app = Flask(__name__, template_folder="../webpage")
 
@@ -28,6 +28,7 @@ def upload():
     selections = request.form.getlist("selection")
     strategy = request.form.get("strategy")
 
+    # In Case something not selected / Edge cases
     if not strategy:
         flash("Please select a strategy (Regex or NLP).")
         return redirect(url_for("index"))
@@ -57,14 +58,25 @@ def upload():
         flash(f"Unsupported file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
         return redirect(url_for("index"))
 
+    # Save the uploaded file and metadata for processing
     file.save(BUFFER_DIR / file.filename)
 
+    # Save the strategy and selections into a .json
     with open(BUFFER_DIR / (file.filename + ".json"), "w", encoding="utf-8") as fp:
         json.dump({"strategy": strategy, "selections": selections}, fp)
 
-    redacted = Redactor(BUFFER_DIR / file.filename).redact()
-    output_path = Reconstructor(file.filename).reconstruct(redacted)
 
+    """
+    Using the buffer file location and metadata, we can invoke the Redactor
+    This class returns the redacted text in string format, based on the strategy and selections.
+    """
+    redacted = Redactor(BUFFER_DIR / file.filename).redact()
+
+    """"
+    The Reconstructor class takes the original filename and the redacted text, and saves the redacted text into a new file in the STORAGE_DIR.
+    """
+    output_path = Reconstructor(file.filename).reconstruct(redacted)
+    
     return redirect(url_for("result", filename=output_path.name))
 
 

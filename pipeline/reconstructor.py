@@ -5,7 +5,7 @@ STORAGE_DIR.mkdir(exist_ok=True)
 
 
 class Reconstructor:
-    """Writes redacted text to a .txt file in storage/, named after the original file."""
+    """Writes redacted text to a .txt file in storage/"""
 
     def __init__(self, original_filename: str):
         stem = pathlib.Path(original_filename).stem

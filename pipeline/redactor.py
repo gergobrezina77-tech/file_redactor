@@ -25,7 +25,8 @@ _STRATEGIES = {
 class Redactor:
     """
     The main redactor class.
-    Reads data from the buffer, extracts text, applies strategy and deletes the file
+    This class implements the logic using a strategy pattern, where the actual redaction logic is delegated to strategy classes.
+    Reads data from the buffer, extracts text, applies strategy and deletes the input file.
     """
     def __init__(self, file_path: str):
         # Set file and meta paths
@@ -47,6 +48,7 @@ class Redactor:
                 raise ValueError(f"Unknown selection {selection!r} for strategy {self.strategy_name!r}.")
 
         # Based on the meta data, collect strategies and extract text
+        # This is a list of strategy child class instances
         self._strategies = [_STRATEGIES[self.strategy_name][s] for s in self.selections]
         self._text = Extractor(file_path).extract()
 
