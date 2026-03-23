@@ -40,7 +40,7 @@ def upload():
     if not selections:
         flash("Please select at least one field to redact.")
         return redirect(url_for("index"))
-
+    
     valid_fields = {"Name", "Email", "Phone number"}
     if not all(s in valid_fields for s in selections):
         flash("Invalid selection.")
@@ -76,7 +76,7 @@ def upload():
     The Reconstructor class takes the original filename and the redacted text, and saves the redacted text into a new file in the STORAGE_DIR.
     """
     output_path = Reconstructor(file.filename).reconstruct(redacted)
-    
+
     return redirect(url_for("result", filename=output_path.name))
 
 

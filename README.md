@@ -73,3 +73,10 @@ The app will be available at [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
 - Python 3.9+
 - See [requirements.txt](requirements.txt) for full dependency list
+
+
+## Defining new Redaction criteria:
+- Set the fields in index.html
+- Rewrite the valid_fields in webpage_interface to accomodate the checks
+- Expland the _STRATEGIES in the main Redactor file
+- Create a new strategy file in the pipeline/strategies/ folder for either the Regex or the nlp or both and implement the logic 
